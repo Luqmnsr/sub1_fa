@@ -2,11 +2,11 @@ package com.example.mybottomnavigation.adapter
 
 import android.view.LayoutInflater
 import android.view.ViewGroup
-import android.widget.ListAdapter
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
-import com.example.mybottomnavigation.data.response.ListEventsItem
+import com.example.mybottomnavigation.R
+import com.example.mybottomnavigation.data.remote.response.ListEventsItem
 import com.example.mybottomnavigation.databinding.ItemEventBinding
 
 class EventAdapter(
@@ -17,11 +17,13 @@ class EventAdapter(
     class EventViewHolder(private val binding: ItemEventBinding) : RecyclerView.ViewHolder(binding.root) {
         fun bind(event: ListEventsItem, onClick: (ListEventsItem) -> Unit) {
             binding.tvEventName.text = event.name
-            binding.tvEventDescription.text = event.summary ?: "No description available"
+            binding.tvEventDescription.text = event.summary
 
-            val imageUrl = event.imageLogo ?: event.mediaCover
+            val imageUrl = event.imageLogo
             Glide.with(binding.root.context)
                 .load(imageUrl)
+                .placeholder(R.drawable.img_placeholder)
+                .error(R.drawable.eror_image)
                 .into(binding.ivEventImage)
 
             binding.root.setOnClickListener {

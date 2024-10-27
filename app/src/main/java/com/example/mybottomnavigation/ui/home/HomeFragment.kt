@@ -6,21 +6,27 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
+import androidx.appcompat.app.AppCompatDelegate
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.asLiveData
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.mybottomnavigation.adapter.EventAdapter
 import com.example.mybottomnavigation.databinding.FragmentHomeBinding
 import com.example.mybottomnavigation.ui.DetailActivity
 import com.example.mybottomnavigation.ui.EventViewModel
+import com.example.mybottomnavigation.ui.setting.SettingPreference
+import com.example.mybottomnavigation.ui.setting.dataStore
 
 class HomeFragment : Fragment() {
 
     private var _binding: FragmentHomeBinding? = null
     private val binding get() = _binding!!
+
     private lateinit var upcomingAdapter: EventAdapter
     private lateinit var finishedAdapter: EventAdapter
     private lateinit var eventViewModel: EventViewModel
+    private lateinit var settingPreference: SettingPreference
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -37,6 +43,17 @@ class HomeFragment : Fragment() {
 
         setupRecyclerViews()
         observeViewModel()
+
+        settingPreference = SettingPreference.getInstance(requireContext().dataStore)
+
+        settingPreference.getThemeSetting().asLiveData()
+            .observe(viewLifecycleOwner) { isDarkModeActive ->
+                if (isDarkModeActive) {
+                    AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
+                } else {
+                    AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
+                }
+            }
     }
 
     private fun setupRecyclerViews() {
@@ -97,13 +114,18 @@ class HomeFragment : Fragment() {
         }
 
         // Observe loading status secara umum
-        eventViewModel.isLoading.observe(viewLifecycleOwner) { isLoading ->
+        eventViewModel.isFinishedLoading.observe(viewLifecycleOwner) { isLoading ->
             if (isLoading) {
-                binding.progressBarUpcoming.visibility = View.VISIBLE
                 binding.progressBarFinished.visibility = View.VISIBLE
             } else {
-                binding.progressBarUpcoming.visibility = View.GONE
                 binding.progressBarFinished.visibility = View.GONE
+            }
+        }
+        eventViewModel.isUpcomingLoading.observe(viewLifecycleOwner) { isLoading ->
+            if (isLoading) {
+                binding.progressBarUpcoming.visibility = View.VISIBLE
+            } else {
+                binding.progressBarUpcoming.visibility = View.GONE
             }
         }
     }

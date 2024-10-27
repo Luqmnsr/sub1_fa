@@ -3,11 +3,11 @@ package com.example.mybottomnavigation.ui
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-import com.example.mybottomnavigation.data.response.DetailResponse
-import com.example.mybottomnavigation.data.response.Event
-import com.example.mybottomnavigation.data.response.EventResponse
-import com.example.mybottomnavigation.data.response.ListEventsItem
-import com.example.mybottomnavigation.data.retrofit.ApiConfig
+import com.example.mybottomnavigation.data.remote.response.DetailResponse
+import com.example.mybottomnavigation.data.remote.response.Event
+import com.example.mybottomnavigation.data.remote.response.EventResponse
+import com.example.mybottomnavigation.data.remote.response.ListEventsItem
+import com.example.mybottomnavigation.data.remote.retrofit.ApiConfig
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -29,20 +29,23 @@ class EventViewModel : ViewModel() {
     private val _errorMessage = MutableLiveData<String>()
     val errorMessage: LiveData<String> get() = _errorMessage
 
-    private val _isLoading = MutableLiveData<Boolean>()
-    val isLoading: LiveData<Boolean> get() = _isLoading
+    private val _isFinishedLoading = MutableLiveData<Boolean>()
+    val isFinishedLoading: LiveData<Boolean> get() = _isFinishedLoading
+
+    private val _isUpcomingLoading = MutableLiveData<Boolean>()
+    val isUpcomingLoading: LiveData<Boolean> get() = _isUpcomingLoading
 
     init {
-        fetchFinishedEventData()
+        fetchFinishedEvents()
         fetchUpcomingEvents()
     }
 
     // Load finished events when the fragment is initialized
     fun loadFinishedEvents() {
-        _isLoading.value = true
+        _isFinishedLoading.value = true
         ApiConfig.getApiService().getFinishedEvents().enqueue(object : Callback<EventResponse> {
             override fun onResponse(call: Call<EventResponse>, response: Response<EventResponse>) {
-                _isLoading.value = false
+                _isFinishedLoading.value = false
                 if (response.isSuccessful) {
                     _listEvent.value = response.body()?.listEvents ?: emptyList()
                     isFinishedEventsLoaded = true
@@ -52,7 +55,7 @@ class EventViewModel : ViewModel() {
             }
 
             override fun onFailure(call: Call<EventResponse>, t: Throwable) {
-                _isLoading.value = false
+                _isFinishedLoading.value = false
                 if (!isFinishedEventsLoaded) {  // Only show error if finished events not loaded
                     _errorMessage.value = "Error: ${t.message}"
                 }
@@ -62,10 +65,10 @@ class EventViewModel : ViewModel() {
 
     // Search finished events based on query
     fun searchFinishedEvents(keyword: String) {
-        _isLoading.value = true
+        _isFinishedLoading.value = true
         ApiConfig.getApiService().searchEvents(active = 0, keyword = keyword).enqueue(object : Callback<EventResponse> {
             override fun onResponse(call: Call<EventResponse>, response: Response<EventResponse>) {
-                _isLoading.value = false
+                _isFinishedLoading.value = false
                 if (response.isSuccessful) {
                     _listEvent.value = response.body()?.listEvents ?: emptyList()
                 } else {
@@ -74,31 +77,31 @@ class EventViewModel : ViewModel() {
             }
 
             override fun onFailure(call: Call<EventResponse>, t: Throwable) {
-                _isLoading.value = false
+                _isFinishedLoading.value = false
                 _errorMessage.value = "Error: ${t.message}"
             }
         })
     }
 
-    // Fetching unfinished events
+    // Fetching upcoming events
     fun fetchUpcomingEvents() {
         if (!isDataLoaded) {
-            _isLoading.value = true
+            _isUpcomingLoading.value = true
             ApiConfig.getApiService().getUpcomingEvents().enqueue(object : Callback<EventResponse> {
                 override fun onResponse(call: Call<EventResponse>, response: Response<EventResponse>) {
-                    _isLoading.value = false
+                    _isUpcomingLoading.value = false
                     if (response.isSuccessful) {
                         _upcomingEvents.value = response.body()?.listEvents ?: emptyList()
                         isDataLoaded = true
                     } else {
-                        _errorMessage.value = "Failed to load unfinished events"
+                        _errorMessage.value = "Failed to load upcoming events"
                     }
                 }
 
                 override fun onFailure(call: Call<EventResponse>, t: Throwable) {
-                    _isLoading.value = false
-                    if (!isDataLoaded) {  // Only show error if unfinished events not loaded
-                        _errorMessage.value = "Error fetching unfinished events: ${t.message}"
+                    _isUpcomingLoading.value = false
+                    if (!isDataLoaded) {  // Only show error if upcoming events not loaded
+                        _errorMessage.value = "Error fetching upcoming events: ${t.message}"
                     }
                 }
             })
@@ -106,8 +109,8 @@ class EventViewModel : ViewModel() {
     }
 
     // Fetching finished events
-    private fun fetchFinishedEventData() {
-        _isLoading.value = true  // Tampilkan progress bar
+    private fun fetchFinishedEvents() {
+        _isFinishedLoading.value = true  // Tampilkan progress bar
         ApiConfig.getApiService().getFinishedEvents().enqueue(object : Callback<EventResponse> {
             override fun onResponse(call: Call<EventResponse>, response: Response<EventResponse>) {
                 if (response.isSuccessful) {
@@ -115,12 +118,12 @@ class EventViewModel : ViewModel() {
                 } else {
                     _errorMessage.value = "Failed to load finished events: ${response.message()}"
                 }
-                _isLoading.value = false
+                _isFinishedLoading.value = false
             }
 
             override fun onFailure(call: Call<EventResponse>, t: Throwable) {
-                _errorMessage.value = "Error fetching unfinished events: ${t.message}"
-                _isLoading.value = false
+                _errorMessage.value = "Error fetching finished events: ${t.message}"
+                _isFinishedLoading.value = false
             }
         })
     }
@@ -131,7 +134,7 @@ class EventViewModel : ViewModel() {
             override fun onResponse(call: Call<DetailResponse>, response: Response<DetailResponse>) {
                 if (response.isSuccessful) {
                     val detailResponse = response.body()
-                    if (detailResponse != null && detailResponse.error != true) {
+                    if (detailResponse?.error == false) {
                         _eventDetail.value = detailResponse.event
                     } else {
                         _errorMessage.value = detailResponse?.message ?: "Event not found"

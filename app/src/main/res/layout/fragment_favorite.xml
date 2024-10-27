@@ -6,10 +6,10 @@
 
     <!-- Title -->
     <TextView
-        android:id="@+id/tvUpcomingEvents"
+        android:id="@+id/tvFavoriteEvent"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:text="@string/title_upcoming"
+        android:text="@string/favorite"
         android:fontFamily="sans-serif-medium"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -18,14 +18,14 @@
         android:textSize="24sp"
         android:textStyle="bold" />
 
-    <!-- Recommendation Event-->
+    <!-- Favorite Event -->
     <TextView
-        android:id="@+id/tvRecommendation"
+        android:id="@+id/tvFavorite"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:fontFamily="sans-serif-medium"
-        android:text="@string/recommendation_event"
-        app:layout_constraintTop_toBottomOf="@id/tvUpcomingEvents"
+        android:text="@string/your_favorite_event"
+        app:layout_constraintTop_toBottomOf="@+id/tvFavoriteEvent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         android:padding="16dp"
@@ -35,7 +35,7 @@
         android:id="@+id/rvEvent"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        app:layout_constraintTop_toBottomOf="@id/tvRecommendation"
+        app:layout_constraintTop_toBottomOf="@id/tvFavorite"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
@@ -44,6 +44,18 @@
         android:id="@+id/progressBar"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:visibility="gone"/>
+
+    <!-- Show when no Favorite Events Added -->
+    <TextView
+        android:id="@+id/noFavoriteMessage"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/no_favorite_events"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"

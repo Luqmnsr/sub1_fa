@@ -4,16 +4,25 @@
     <string name="title_home">Home</string>
     <string name="title_upcoming">Upcoming</string>
     <string name="title_finished">Finished</string>
+    <string name="title_setting">Setting</string>
+    <string name="title_favorite">Favorite</string>
 
-    <string name="hello_blank_fragment">Hello blank fragment</string>
     <string name="remaining_quota_label">Sisa Kuota: %1$d</string>
     <string name="register">Register</string>
     <string name="recommendation_event">Recommendation Event</string>
     <string name="gambar">Gambar</string>
-    <string name="finished">Finished</string>
+    <string name="finished">Finished Event</string>
     <string name="dicoding_event">Dicoding Event</string>
     <string name="upcoming_event">Upcoming Event</string>
     <string name="search_bar">Search Bar</string>
     <string name="searchbar_hint">Search\n\n</string>
     <string name="event_image">Event Image\n</string>
+
+    <string name="favorite">Favorite</string>
+    <string name="your_favorite_event">Your Favorite Event</string>
+    <string name="dark_mode">Dark Mode</string>
+    <string name="get_notification">Get Notification</string>
+    <string name="dark_mode_switch">Dark Mode Switch</string>
+    <string name="get_notification_switch">Get Notification Switch</string>
+    <string name="no_favorite_events">No favorite events</string>
 </resources>

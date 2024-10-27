@@ -22,15 +22,18 @@
             android:orientation="vertical"
             android:padding="8dp">
 
+            <!-- Title -->
             <TextView
                 android:id="@+id/tvWelcome"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="@string/dicoding_event"
-                android:textSize="20sp"
+                android:textSize="24sp"
                 android:fontFamily="sans-serif-medium"
-                android:padding="16dp" />
+                android:padding="16dp"
+                android:textStyle="bold"/>
 
+            <!--Upcoming EventsTitle -->
             <TextView
                 android:id="@+id/tvUpcomingEvents"
                 android:layout_width="match_parent"
@@ -57,6 +60,7 @@
                 android:orientation="horizontal"
                 tools:listitem="@layout/item_event" />
 
+            <!-- Upcoming Events Title -->
             <TextView
                 android:id="@+id/tvFinishedEvents"
                 android:layout_width="match_parent"

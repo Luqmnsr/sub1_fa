@@ -6,20 +6,26 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
+import androidx.appcompat.app.AppCompatDelegate
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.asLiveData
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.mybottomnavigation.adapter.EventAdapter
 import com.example.mybottomnavigation.databinding.FragmentUpcomingBinding
 import com.example.mybottomnavigation.ui.DetailActivity
 import com.example.mybottomnavigation.ui.EventViewModel
+import com.example.mybottomnavigation.ui.setting.SettingPreference
+import com.example.mybottomnavigation.ui.setting.dataStore
 
 class UpcomingFragment : Fragment() {
 
     private var _binding: FragmentUpcomingBinding? = null
     private val binding get() = _binding!!
+
     private lateinit var eventViewModel: EventViewModel
     private lateinit var eventAdapter: EventAdapter
+    private lateinit var settingPreference: SettingPreference
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -53,13 +59,24 @@ class UpcomingFragment : Fragment() {
         }
 
         // Observasi loading status untuk mengontrol visibilitas ProgressBar
-        eventViewModel.isLoading.observe(viewLifecycleOwner) { isLoading ->
+        eventViewModel.isUpcomingLoading.observe(viewLifecycleOwner) { isLoading ->
             if (isLoading) {
                 binding.progressBar.visibility = View.VISIBLE // Tampilkan ProgressBar
             } else {
                 binding.progressBar.visibility = View.GONE // Sembunyikan ProgressBar
             }
         }
+
+        settingPreference = SettingPreference.getInstance(requireContext().dataStore)
+
+        settingPreference.getThemeSetting().asLiveData()
+            .observe(viewLifecycleOwner) { isDarkModeActive ->
+                if (isDarkModeActive) {
+                    AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
+                } else {
+                    AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
+                }
+            }
     }
 
     private fun setupRecyclerView() {

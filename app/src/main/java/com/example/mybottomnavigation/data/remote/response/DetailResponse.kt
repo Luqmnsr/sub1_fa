@@ -1,20 +1,20 @@
-package com.example.mybottomnavigation.data.response
+package com.example.mybottomnavigation.data.remote.response
 
 import com.google.gson.annotations.SerializedName
 
-data class EventResponse(
-
-	@field:SerializedName("listEvents")
-	val listEvents: List<ListEventsItem>,
+data class DetailResponse(
 
 	@field:SerializedName("error")
 	val error: Boolean,
 
 	@field:SerializedName("message")
-	val message: String
+	val message: String,
+
+	@field:SerializedName("event")
+	val event: Event
 )
 
-data class ListEventsItem(
+data class Event(
 
 	@field:SerializedName("summary")
 	val summary: String,
@@ -25,9 +25,6 @@ data class ListEventsItem(
 	@field:SerializedName("registrants")
 	val registrants: Int,
 
-	@field:SerializedName("imageLogo")
-	val imageLogo: String,
-
 	@field:SerializedName("link")
 	val link: String,
 
@@ -36,9 +33,6 @@ data class ListEventsItem(
 
 	@field:SerializedName("ownerName")
 	val ownerName: String,
-
-	@field:SerializedName("cityName")
-	val cityName: String,
 
 	@field:SerializedName("quota")
 	val quota: Int,
@@ -50,11 +44,5 @@ data class ListEventsItem(
 	val id: Int,
 
 	@field:SerializedName("beginTime")
-	val beginTime: String,
-
-	@field:SerializedName("endTime")
-	val endTime: String,
-
-	@field:SerializedName("category")
-	val category: String
+	val beginTime: String
 )

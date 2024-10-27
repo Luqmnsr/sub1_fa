@@ -1,7 +1,7 @@
-package com.example.mybottomnavigation.data.retrofit
+package com.example.mybottomnavigation.data.remote.retrofit
 
-import com.example.mybottomnavigation.data.response.DetailResponse
-import com.example.mybottomnavigation.data.response.EventResponse
+import com.example.mybottomnavigation.data.remote.response.DetailResponse
+import com.example.mybottomnavigation.data.remote.response.EventResponse
 import retrofit2.Call
 import retrofit2.http.GET
 import retrofit2.http.Path
@@ -32,5 +32,10 @@ interface ApiService {
     fun searchEvents(
         @Query("active") active: Int = -1,
         @Query("q") keyword: String
+    ): Call<EventResponse>
+
+    @GET("events?active=-1")
+    fun getEventDaily(
+        @Query("limit") limit: Int = 1
     ): Call<EventResponse>
 }

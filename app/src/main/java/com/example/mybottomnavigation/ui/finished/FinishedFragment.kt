@@ -7,20 +7,26 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
+import androidx.appcompat.app.AppCompatDelegate
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.asLiveData
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.mybottomnavigation.adapter.EventAdapter
 import com.example.mybottomnavigation.databinding.FragmentFinishedBinding
 import com.example.mybottomnavigation.ui.DetailActivity
 import com.example.mybottomnavigation.ui.EventViewModel
+import com.example.mybottomnavigation.ui.setting.SettingPreference
+import com.example.mybottomnavigation.ui.setting.dataStore
 
 class FinishedFragment : Fragment() {
 
     private var _binding: FragmentFinishedBinding? = null
     private val binding get() = _binding!!
+
     private lateinit var eventViewModel: EventViewModel
     private lateinit var eventAdapter: EventAdapter
+    private lateinit var settingPreference: SettingPreference
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -54,10 +60,8 @@ class FinishedFragment : Fragment() {
         }
 
         // Observe loading status
-        eventViewModel.isLoading.observe(viewLifecycleOwner) { isLoading ->
-            if (!eventViewModel.isFinishedEventsLoaded) {  // Only show loading if data not loaded
-                showLoading(isLoading)
-            }
+        eventViewModel.isFinishedLoading.observe(viewLifecycleOwner) { isLoading ->
+            showLoading(isLoading)
         }
 
         // Setup search functionality
@@ -67,6 +71,17 @@ class FinishedFragment : Fragment() {
         if (!eventViewModel.isFinishedEventsLoaded) {
             eventViewModel.loadFinishedEvents()
         }
+
+        settingPreference = SettingPreference.getInstance(requireContext().dataStore)
+
+        settingPreference.getThemeSetting().asLiveData()
+            .observe(viewLifecycleOwner) { isDarkModeActive ->
+                if (isDarkModeActive) {
+                    AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
+                } else {
+                    AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
+                }
+            }
     }
 
     private fun setupSearchBar() {
@@ -105,13 +120,7 @@ class FinishedFragment : Fragment() {
     }
 
     private fun showLoading(isLoading: Boolean) {
-        if (isLoading) {
-            binding.progressBar.visibility = View.VISIBLE
-            binding.rvEvent.visibility = View.GONE // Hide RecyclerView while loading
-        } else {
-            binding.progressBar.visibility = View.GONE
-            binding.rvEvent.visibility = View.VISIBLE // Show RecyclerView once loading is finished
-        }
+        binding.progressBar.visibility = if (isLoading) View.VISIBLE else View.GONE
     }
 
     private fun updateUi(isEmpty: Boolean) {

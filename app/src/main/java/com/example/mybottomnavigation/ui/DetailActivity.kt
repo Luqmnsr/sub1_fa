@@ -4,116 +4,128 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.view.View
-import android.widget.Button
-import android.widget.ImageView
-import android.widget.ProgressBar
-import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.text.HtmlCompat
+import androidx.lifecycle.asLiveData
 import com.bumptech.glide.Glide
 import com.example.mybottomnavigation.R
-import com.example.mybottomnavigation.data.response.Event
+import com.example.mybottomnavigation.data.EventRepository
+import com.example.mybottomnavigation.data.local.entity.EventEntity
+import com.example.mybottomnavigation.data.remote.response.Event
+import com.example.mybottomnavigation.databinding.ActivityDetailBinding
+import com.example.mybottomnavigation.ui.setting.SettingPreference
+import com.example.mybottomnavigation.ui.setting.dataStore
 
 class DetailActivity : AppCompatActivity(), View.OnClickListener {
 
-    private lateinit var imgMediaCover: ImageView
-    private lateinit var tvEventName: TextView
-    private lateinit var tvEventTime: TextView
-    private lateinit var tvEventOwner: TextView
-    private lateinit var tvRemainingQuota: TextView
-    private lateinit var tvEventDescription: TextView
-    private lateinit var btnRegister: Button
-    private lateinit var progressBar: ProgressBar
+    private lateinit var binding: ActivityDetailBinding
+    private lateinit var settingPreference: SettingPreference
+    private lateinit var eventRepository: EventRepository
+    private lateinit var eventEntity: EventEntity
+    private var isFavorite: Boolean = false
 
     private val viewModel: EventViewModel by viewModels()
     private var currentEvent: Event? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_detail)
+        binding = ActivityDetailBinding.inflate(layoutInflater)
+        setContentView(binding.root)
 
-        imgMediaCover = findViewById(R.id.imgMediaCover)
-        tvEventName = findViewById(R.id.tvEventName)
-        tvEventTime = findViewById(R.id.tvEventTime)
-        tvEventOwner = findViewById(R.id.tvEventOwner)
-        tvRemainingQuota = findViewById(R.id.tvRemainingQuota)
-        tvEventDescription = findViewById(R.id.tvDescription)
-        progressBar = findViewById(R.id.progressBar)
+        supportActionBar?.apply {
+            setDisplayHomeAsUpEnabled(true)
+        }
 
-        btnRegister = findViewById(R.id.btnRegister)
-        btnRegister.setOnClickListener(this)
-
-        // Terima data ID event dari intent
+        binding.btnRegister.setOnClickListener(this)
         val eventId = intent.getStringExtra("EVENT_ID")
 
-        // Panggil API untuk mendapatkan detail event
+        eventRepository = EventRepository(application)
+
         if (eventId != null) {
-            // Tampilkan ProgressBar saat mulai memuat data
-            progressBar.visibility = View.VISIBLE
-
-            // Fetch detail event
+            binding.progressBar.visibility = View.VISIBLE
             viewModel.fetchDetailEvent(eventId)
-
-            // Observe the event detail LiveData
             viewModel.eventDetail.observe(this) { event ->
-                progressBar.visibility = View.GONE
+                binding.progressBar.visibility = View.GONE
                 event?.let {
                     currentEvent = it
                     displayEventDetails(it)
-
-                }
-
-                // Observe error messages
-                viewModel.errorMessage.observe(this) { message ->
-                    progressBar.visibility = View.GONE
-                    Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
+                    eventEntity = EventEntity(
+                        it.id.toString(),
+                        it.name ,
+                        it.mediaCover ,
+                        System.currentTimeMillis(),
+                        it.summary,
+                        isFavorite
+                    )
+                    observeFavoriteStatus(eventId)
                 }
             }
+
+            viewModel.errorMessage.observe(this) { message ->
+                binding.progressBar.visibility = View.GONE
+                Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
+            }
+        }
+
+        settingPreference = SettingPreference.getInstance(application.dataStore)
+        settingPreference.getThemeSetting().asLiveData().observe(this) { isDarkModeActive ->
+            AppCompatDelegate.setDefaultNightMode(if (isDarkModeActive) AppCompatDelegate.MODE_NIGHT_YES else AppCompatDelegate.MODE_NIGHT_NO)
+        }
+
+        binding.btnFavorite.setOnClickListener {
+            handleFavoriteClick()
         }
     }
-        private fun displayEventDetails(event: Event) {
-            // Update TextView with event details
+
+    private fun displayEventDetails(event: Event) {
+        binding.apply {
             tvEventName.text = event.name
             tvEventOwner.text = event.ownerName
             tvEventTime.text = event.beginTime
-
-            // Use HtmlCompat to set the description
-            tvEventDescription.text =
-                HtmlCompat.fromHtml(event.description.orEmpty(), HtmlCompat.FROM_HTML_MODE_LEGACY)
-
-            // Calculate remaining quota
-            val remainingQuota = event.quota?.minus(event.registrants ?: 0) ?: 0
-            tvRemainingQuota.text = getString(R.string.remaining_quota_label, remainingQuota)
-
-            // Update ActionBar title with event name
+            tvDescription.text = HtmlCompat.fromHtml(event.description, HtmlCompat.FROM_HTML_MODE_LEGACY)
+            tvRemainingQuota.text = getString(R.string.remaining_quota_label, (event.quota) - (event.registrants))
             supportActionBar?.title = event.name
-
-            // Load event image using Glide
-            Glide.with(this)
-                .load(event.mediaCover ?: event.imageLogo)
+            Glide.with(this@DetailActivity)
+                .load(event.mediaCover)
                 .into(imgMediaCover)
         }
+    }
 
-        override fun onClick(v: View) {
-            when (v.id) {
-                R.id.btnRegister -> {
-                    val url = currentEvent?.link
-                    if (url != null) {
-                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
-                        startActivity(intent)
-                    } else {
-                        Toast.makeText(this, "Registration URL not available", Toast.LENGTH_SHORT)
-                            .show()
-                    }
-                }
-            }
+    private fun observeFavoriteStatus(eventId: String) {
+        eventRepository.getFavoriteEventById(eventId).observe(this) { favoriteEvent ->
+            isFavorite = favoriteEvent != null
+            updateFavoriteIcon(isFavorite)
         }
+    }
 
-    // Handle back button in ActionBar
+    private fun updateFavoriteIcon(isFavorite: Boolean) {
+        binding.btnFavorite.setImageResource(
+            if (isFavorite) R.drawable.ic_favorite
+            else R.drawable.baseline_favorite_border_24)
+    }
+
+    private fun handleFavoriteClick() {
+        if (isFavorite) {
+            eventRepository.deleteFavorite(eventEntity)
+        } else {
+            eventRepository.insertFavorite(eventEntity)
+        }
+    }
+
+    override fun onClick(v: View) {
+        if (v.id == binding.btnRegister.id) {
+            currentEvent?.link?.let { url ->
+                startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
+            } ?: Toast.makeText(this, "Registration URL not available", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    //BackButton
     override fun onSupportNavigateUp(): Boolean {
-        onBackPressed()
+        onBackPressedDispatcher.onBackPressed()
         return true
     }
 }
