@@ -18,8 +18,11 @@ import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
 
-class DailyReminder(context: Context, workerParams: WorkerParameters)
-    : Worker(context, workerParams) {
+class DailyReminder(context: Context, workerParams: WorkerParameters) : Worker(context, workerParams) {
+
+    companion object {
+        private const val CHANNEL_ID = "daily_reminder_channel"
+    }
 
     override fun doWork(): Result {
         // Panggil API untuk mendapatkan event terdekat
@@ -29,14 +32,13 @@ class DailyReminder(context: Context, workerParams: WorkerParameters)
                 if (response.isSuccessful) {
                     val event = response.body()?.listEvents?.firstOrNull()
                     event?.let {
-                        showNotification(it.name , it.beginTime )
+                        showNotification(it.name, it.beginTime)
                     }
                 }
             }
 
             override fun onFailure(call: Call<EventResponse>, t: Throwable) {
                 Log.e("DailyReminder", "Failed to fetch events", t)
-
                 showFailureNotification()
             }
         })
@@ -50,14 +52,14 @@ class DailyReminder(context: Context, workerParams: WorkerParameters)
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 val channel = NotificationChannel(
-                    "daily_reminder_channel",
+                    CHANNEL_ID,
                     "Daily Reminder",
                     NotificationManager.IMPORTANCE_DEFAULT
                 )
                 notificationManager.createNotificationChannel(channel)
             }
 
-            val notification = NotificationCompat.Builder(applicationContext, "daily_reminder_channel")
+            val notification = NotificationCompat.Builder(applicationContext, CHANNEL_ID)
                 .setContentTitle("Event Upcoming: $eventName")
                 .setContentText("Waktu: $eventDate")
                 .setSmallIcon(R.drawable.baseline_notifications_24)
@@ -69,29 +71,24 @@ class DailyReminder(context: Context, workerParams: WorkerParameters)
     }
 
     private fun showFailureNotification() {
-        if (ContextCompat.checkSelfPermission(
-                applicationContext,
-                android.Manifest.permission.POST_NOTIFICATIONS
-            ) == PackageManager.PERMISSION_GRANTED
-        ) {
+        if (ContextCompat.checkSelfPermission(applicationContext, android.Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED) {
             val notificationManager = NotificationManagerCompat.from(applicationContext)
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 val channel = NotificationChannel(
-                    "daily_reminder_channel",
+                    CHANNEL_ID,
                     "Daily Reminder",
                     NotificationManager.IMPORTANCE_DEFAULT
                 )
                 notificationManager.createNotificationChannel(channel)
             }
 
-            val notification =
-                NotificationCompat.Builder(applicationContext, "daily_reminder_channel")
-                    .setContentTitle(" Daily Reminder Error")
-                    .setContentText("Failed to fetch events")
-                    .setSmallIcon(R.drawable.baseline_error_24)
-                    .setPriority(NotificationCompat.PRIORITY_DEFAULT)
-                    .build()
+            val notification = NotificationCompat.Builder(applicationContext, CHANNEL_ID)
+                .setContentTitle("Daily Reminder Error")
+                .setContentText("Failed to fetch events")
+                .setSmallIcon(R.drawable.baseline_error_24)
+                .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+                .build()
 
             notificationManager.notify(2, notification)
         }
